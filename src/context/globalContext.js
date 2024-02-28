@@ -16,6 +16,7 @@ export default function GlobalState({children}){
             const data = await res.json()
             
             if(data){
+                console.log(data)
                 setRecipeList(data.meals)
                 setLoading(false)
                 setSearch('')

@@ -1,67 +1,99 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { GlobalContext } from '../context/globalContext'
 import Ingredients from '../components/Ingredients'
+import YouTube from '../components/Youtube'
+import { IoIosHeart } from "react-icons/io";
 
 function Details() {
 
   const {id} = useParams()
   const {recipeDetails,setRecipeDetails} = useContext(GlobalContext)
-
-  const keysToExtract = ["strIngredient1", "strIngredient2","strIngredient3","strIngredient4","strIngredient5","strIngredient6",
-                        "strIngredient7", "strIngredient8","strIngredient9","strIngredient10","strIngredient11","strIngredient12",
-                        "strIngredient13", "strIngredient14","strIngredient15","strIngredient16","strIngredient17","strIngredient18",
-                        "strIngredient19", "strIngredient20"]
-
-  const slicedData = {};
-
-  keysToExtract.forEach(key => {
-    if (recipeDetails.hasOwnProperty(key)&&recipeDetails.hasOwnProperty(key)!=="") {
-      slicedData[key] = recipeDetails[key];
-    }
-  });
-
-
+  const [ingredients,setIngredients] = useState([])
+  const [videoId,setVideoId] = useState(null)
+  const [favouriteItem,setfavoutireItem] = useState([])
+ 
   console.log(id)
   useEffect(()=>{
     async function getRecipeDetails(){
       const res = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`)
       const data = await res.json()
       if(data){
-        console.log(data.meals[0].strMealThumb)
-        setRecipeDetails(data.meals[0])
-      }
-    }
+        // console.log(data)
+        const url = new URL(data.meals[0].strYoutube);
+        const searchParams = new URLSearchParams(url.search);
+        const videoId = searchParams.get('v');
+        console.log("Video id",videoId)
+        setVideoId(videoId)
 
-    getRecipeDetails()
-  },[])
+        setRecipeDetails(data.meals[0])
+        const filteredData = Object.fromEntries(
+          Object.entries(data.meals[0]).filter(([key, value]) => value !== null && value !== "")
+        );
+        console.log("FilteredData",filteredData)
+        const ingredientMeasureArray = [];
+        for (let i = 1; i <= 20; i++) {
+        const ingredient = filteredData[`strIngredient${i}`];
+        const measure = filteredData[`strMeasure${i}`];
+        if (ingredient && measure) {
+          ingredientMeasureArray.push({ ingredient, measure });
+        }
+      }
+      setIngredients(ingredientMeasureArray)
+    }
+    
+    // Filter out keys with null or empty string values
+    
+  }
+  
+  getRecipeDetails()
+},[])
+
+  console.log("Increditen",ingredients)
+
+  function addToFavourites(id){
+    console.log("Meal id",id)
+    let favouriteArray = setfavoutireItem((prev)=>{
+      return [...prev,id]
+    })
+    console.log("Favourites array",favouriteArray)
+  }
   
   return (
     <div>
-      <div className='container mx-auto py-10 grid grid-cols-1 lg:grid-cols-2 gap-10'>
+      <div className='container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20'>
       <div className='row-start-2 lg:row-start-auto'>
-        <div className='h-96 overflow-hidden rounded-xl group my-14'>
+        <div className='h-96 rounded-xl group my-14 flex items-center justify-center'>
           <img src={recipeDetails.strMealThumb} alt="Image" 
-          className='w-full h-full object-cover block group-hover:scale-105 duration-300'/>
+          className='w-full h-full object-cover block group-hover:scale-105 duration-300 relative'/>
+          <IoIosHeart className='absolute w-20 h-16 text-red-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer'
+          onClick={()=>addToFavourites(recipeDetails.idMeal)}/>
         </div>
-      </div>
-      <div className='flex flex-col gap-3 h-10'>
-        <h1 className='text-xl font-bold'>{recipeDetails.strMeal}</h1>
         
-        <div className='grid grid-cols-3 my-3'>
-        {
-          Object.keys(slicedData).map((item)=>{
-            return <div className='bg-yellow-500 m-2 rounded-xl p-2'>
-                  {slicedData[item]}
-                    </div>
-              
-          })
+      </div>
+      <div className='flex justify-start flex-col'>
+        <h1 className='text-2xl font-bold my-14 text-center'>{recipeDetails.strMeal}</h1>
+        
+        <h1 className='text-xl font-bold'>Ingredients</h1>
+        <ul className='my-3 flex flex-col flex-wrap h-56 w-72'>
+        { recipeDetails?
+          Object.values(ingredients).map((value, index) => (
+            <li key={index} className='text-lg list-disc mx-4'>{value.ingredient}:{value.measure}</li>
+          )) 
+          :
+          <div>Something went wrong</div>
         }
+        </ul>
       </div>
+      <div className='-my-12 border-red-600 border-solid border-8 h-fit mb-8'>
+        {videoId ? <YouTube id={videoId}/>: ""}
       </div>
-        <div>
-          
-        </div>
+      <div className='-my-12 mb-8 flex flex-col gap-5'>
+        <h1 className='text-2xl'>How to cook?</h1>
+        {recipeDetails.strInstructions}
+        {recipeDetails.strSource?<h1>Know more @<a href={recipeDetails.strSource}>{recipeDetails.strSource}</a></h1>:""}
+      </div>
+        
     </div>
     
     </div>
