@@ -1,17 +1,18 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { GlobalContext } from '../context/globalContext'
-import Ingredients from '../components/Ingredients'
 import YouTube from '../components/Youtube'
 import { IoIosHeart } from "react-icons/io";
+import { BsFillHeartbreakFill } from "react-icons/bs";
 
 function Details() {
 
   const {id} = useParams()
-  const {recipeDetails,setRecipeDetails} = useContext(GlobalContext)
+  const {recipeDetails,setRecipeDetails,handleFavourites,favouriteList,handleRemoveFromFavourites} = useContext(GlobalContext)
   const [ingredients,setIngredients] = useState([])
   const [videoId,setVideoId] = useState(null)
-  const [favouriteItem,setfavoutireItem] = useState([])
+
+  
  
   console.log(id)
   useEffect(()=>{
@@ -51,13 +52,6 @@ function Details() {
 
   console.log("Increditen",ingredients)
 
-  function addToFavourites(id){
-    console.log("Meal id",id)
-    let favouriteArray = setfavoutireItem((prev)=>{
-      return [...prev,id]
-    })
-    console.log("Favourites array",favouriteArray)
-  }
   
   return (
     <div>
@@ -66,8 +60,17 @@ function Details() {
         <div className='h-96 rounded-xl group my-14 flex items-center justify-center'>
           <img src={recipeDetails.strMealThumb} alt="Image" 
           className='w-full h-full object-cover block group-hover:scale-105 duration-300 relative'/>
-          <IoIosHeart className='absolute w-20 h-16 text-red-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer'
-          onClick={()=>addToFavourites(recipeDetails.idMeal)}/>
+          {
+    favouriteList.findIndex((item) => item.idMeal === recipeDetails.idMeal) === -1 ?
+    <IoIosHeart
+      className='absolute w-20 h-16 text-red-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer'
+      onClick={() => handleFavourites(recipeDetails)}
+    />
+    
+    : <BsFillHeartbreakFill className='absolute w-20 h-16 text-red-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer'
+    onClick={()=>handleRemoveFromFavourites(recipeDetails)}/>
+  }
+          
         </div>
         
       </div>
