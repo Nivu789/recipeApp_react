@@ -9,6 +9,7 @@ export default function GlobalState({children}){
     const [recipeList,setRecipeList] = useState([])
     const [recipeDetails,setRecipeDetails] = useState([])
     const [favouriteList,setFavouriteList] = useState([])
+    const [randomRecipe,setRandomRecipe] = useState(null)
 
     async function handleSubmit(event){
         event.preventDefault()
@@ -21,6 +22,7 @@ export default function GlobalState({children}){
                 setRecipeList(data.meals)
                 setLoading(false)
                 setSearch('')
+                setRandomRecipe(null)
             } 
         } catch (error) {
             console.log(error.message)
@@ -51,6 +53,16 @@ export default function GlobalState({children}){
         }
         setFavouriteList(cpyFavourites)
     }
+
+    async function handleRandomRecipe(){
+       let response = await fetch('https://www.themealdb.com/api/json/v1/1/random.php') 
+       let data = await response.json()
+    if(data){
+        console.log("RandomData",data.meals[0])
+        setRandomRecipe(data.meals[0])
+    }
+    }
     
-    return <GlobalContext.Provider value={{search,setSearch,handleSubmit,loading,recipeList,recipeDetails,setRecipeDetails,handleFavourites,favouriteList,handleRemoveFromFavourites}}>{children}</GlobalContext.Provider>
+    return <GlobalContext.Provider value={{search,setSearch,handleSubmit,loading,recipeList,recipeDetails,setRecipeDetails,handleFavourites,favouriteList,handleRemoveFromFavourites
+        ,handleRandomRecipe,randomRecipe}}>{children}</GlobalContext.Provider>
 }
